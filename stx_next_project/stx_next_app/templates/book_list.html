@@ -5,6 +5,13 @@
           <title>STX NEXT-Books</title>
      </head>
      <body>
-         
+         <form method="GET">
+            <input type="text" name='title'>
+            <input type="text" name='authors'>
+            <input type="submit" value="search">
+         </form>
+         {%for book in object_list%}
+            <p>book</p>
+         {%endfor%}
      </body>
 </html>

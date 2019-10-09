@@ -4,7 +4,15 @@ from .models import Book,Author,ImageLinks,IndustryIdentifiers,BookAuthors
 
 class BookList(ListView):
     template_name = 'book_list.html'
+
     def get_queryset(self):
-        pass
-    def get_context_data(self):
-        pass
+        queryset = super(BookList, self).get_queryset()
+        name = self.request.GET.get
+
+        title = name('title')
+        author = name('author') 
+        language = name('language')
+        publised_date = name('published_date')
+
+        queryset = BookAuthors.objects.filter(title_icontains=title)
+        return queryset
