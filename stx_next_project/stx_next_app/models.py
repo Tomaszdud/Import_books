@@ -3,8 +3,8 @@ from django.db import models
 
 class Book(models.Model):
     title = models.TextField()
-    published_date = models.DateField()
-    page_count = models.IntegerField()
+    published_date = models.DateField(null=True)
+    page_count = models.IntegerField(null=True)
     image_links = models.ForeignKey('ImageLinks', on_delete=models.DO_NOTHING)
     language = models.CharField(max_length=10)
 

@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+     <head>
+          <meta charset="UTF-8"/>
+          <title>STX NEXT-Books</title>
+     </head>
+     <header>
+         <a href=''><button>Add new book</button></a>
+     </header>
+     <body>
+         <form method="GET">
+            <input type="text" name='title'>
+            <input type="text" name='authors'>
+            <input type="submit" value="search">
+         </form>
+         {%for book in object_list%}
+            <p>book</p>
+         {%endfor%}
+     </body>
+</html>
