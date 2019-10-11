@@ -33,9 +33,7 @@ class BookList(ListView):
         published_date_from = published_date_from_year + '-' + published_date_from_month + '-' + published_date_from_day
         published_date_to = published_date_to_year + '-' + published_date_to_month + '-' + published_date_to_day
 
-        if (authors is not '' and
-            len(published_date_from) is 8 and
-            len(published_date_to) is 8):
+        if (len(published_date_from) is 8 and len(published_date_to) is 8):
 
             queryset = BookAuthors.objects.filter(author__author__icontains=authors,
                                                     book__title__icontains=title,
@@ -46,18 +44,14 @@ class BookList(ListView):
         elif authors is not '':
 
             queryset = BookAuthors.objects.filter(author__author__icontains=authors,
-                                        book__title__icontains=title,
-                                        book__language__icontains=language)
+                                                    book__title__icontains=title,
+                                                    book__language__icontains=language)
             return queryset
 
-        elif (title is not '' or 
-            language is not '' or
-            len(published_date_from) is 8 and
-             len(published_date_to) is 8):
+        elif title is not '' or language is not '':
 
             book = Book.objects.filter(title__icontains=title,
-                                        language__icontains=language,
-                                        published_date__range=[published_date_from,published_date_to])
+                                        language__icontains=language)
             queryset = book
             return queryset
 
