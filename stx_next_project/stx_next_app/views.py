@@ -3,11 +3,13 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView,CreateView, FormView
 from .models import Book,ImageLinks,IndustryIdentifiers,BookAuthors, Authors
 from .forms import BookAddForm, SearchBookForm
+import datetime
 
 
 class BookList(ListView):
     template_name = 'book_list.html'
     form_class = SearchBookForm
+    current = datetime.datetime.now()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -21,19 +23,47 @@ class BookList(ListView):
         authors = field('authors','')
         title = field('title','')
         language = field('language','')
-        
-        if authors is not '':
+        published_date_from_month = field('published_date_from_month','')
+        published_date_from_year = field('published_date_from_year','')
+        published_date_from_day = field('published_date_from_day','')
+        published_date_to_month = field('published_date_to_month','')
+        published_date_to_year = field('published_date_to_year','')
+        published_date_to_day = field('published_date_to_day','')
+
+        published_date_from = published_date_from_year + '-' + published_date_from_month + '-' + published_date_from_day
+        published_date_to = published_date_to_year + '-' + published_date_to_month + '-' + published_date_to_day
+
+        if (authors is not '' and
+            len(published_date_from) is 8 and
+            len(published_date_to) is 8):
+
             queryset = BookAuthors.objects.filter(author__author__icontains=authors,
                                                     book__title__icontains=title,
-                                                    book__language__icontains=language)
+                                                    book__language__icontains=language,
+                                                    book__published_date__range=[published_date_from,published_date_to])
             return queryset
-        elif title is not '' or language is not '':
+
+        elif authors is not '':
+
+            queryset = BookAuthors.objects.filter(author__author__icontains=authors,
+                                        book__title__icontains=title,
+                                        book__language__icontains=language)
+            return queryset
+
+        elif (title is not '' or 
+            language is not '' or
+            len(published_date_from) is 8 and
+             len(published_date_to) is 8):
+
             book = Book.objects.filter(title__icontains=title,
-                                        language__icontains=language)
+                                        language__icontains=language,
+                                        published_date__range=[published_date_from,published_date_to])
             queryset = book
             return queryset
 
         return queryset
+
+
 
 class BookAdd(FormView):
     form_class = BookAddForm
