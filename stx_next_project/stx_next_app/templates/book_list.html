@@ -5,16 +5,17 @@
           <title>STX NEXT-Books</title>
      </head>
      <header>
-         <a href=''><button>Add new book</button></a>
+         <a href={% url 'book_add' %}><button>Add new book</button></a>
      </header>
      <body>
+         <h2>Search:</h2>
          <form method="GET">
-            <input type="text" name='title'>
-            <input type="text" name='authors'>
+             {{form.as_p}}
             <input type="submit" value="search">
          </form>
+         <h2>List:</h2>
          {%for book in object_list%}
-            <p>book</p>
+            <p>{{book}}</p>
          {%endfor%}
      </body>
 </html>

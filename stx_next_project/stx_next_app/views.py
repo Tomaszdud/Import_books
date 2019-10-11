@@ -2,7 +2,37 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import ListView,CreateView, FormView
 from .models import Book,ImageLinks,IndustryIdentifiers,BookAuthors, Authors
-from .forms import BookAddForm
+from .forms import BookAddForm, SearchBookForm
+
+
+class BookList(ListView):
+    template_name = 'book_list.html'
+    form_class = SearchBookForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = SearchBookForm()
+        return context
+
+    def get_queryset(self):
+        queryset = Book.objects.all()
+        field = self.request.GET.get
+        
+        authors = field('authors','')
+        title = field('title','')
+        language = field('language','')
+
+        book = Book.objects.filter(title__icontains=title,language__icontains=language)
+        
+        if authors is not '':
+            author = Authors.objects.filter(author__icontains=authors)
+            queryset = BookAuthors.objects.filter(author=author,book=book)
+            return queryset
+        elif title is not '' or language is not '':
+            queryset = book
+            return queryset
+
+        return queryset
 
 class BookAdd(FormView):
     form_class = BookAddForm
