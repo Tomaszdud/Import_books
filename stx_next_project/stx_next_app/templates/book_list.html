@@ -15,7 +15,11 @@
          </form>
          <h2>List:</h2>
          {%for book in object_list%}
-            <p>{{book}}</p>
+         {%if book.book.title%}
+            <p>{{book.book.title}}</p>
+         {%else%}
+         <p>{{book.title}}</p>
+         {%endif%}
          {%endfor%}
      </body>
 </html>

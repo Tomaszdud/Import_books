@@ -21,14 +21,15 @@ class BookList(ListView):
         authors = field('authors','')
         title = field('title','')
         language = field('language','')
-
-        book = Book.objects.filter(title__icontains=title,language__icontains=language)
         
         if authors is not '':
-            author = Authors.objects.filter(author__icontains=authors)
-            queryset = BookAuthors.objects.filter(author=author,book=book)
+            queryset = BookAuthors.objects.filter(author__author__icontains=authors,
+                                                    book__title__icontains=title,
+                                                    book__language__icontains=language)
             return queryset
         elif title is not '' or language is not '':
+            book = Book.objects.filter(title__icontains=title,
+                                        language__icontains=language)
             queryset = book
             return queryset
 
@@ -37,7 +38,7 @@ class BookList(ListView):
 class BookAdd(FormView):
     form_class = BookAddForm
     template_name = 'book_add.html'
-    success_url = reverse_lazy('book_add')
+    success_url = reverse_lazy('book_list')
 
     def form_valid(self,form):
         data = form.cleaned_data
