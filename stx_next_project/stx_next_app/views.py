@@ -2,12 +2,68 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import ListView,CreateView, FormView
 from .models import Book,ImageLinks,IndustryIdentifiers,BookAuthors, Authors
-from .forms import BookAddForm
+from .forms import BookAddForm, SearchBookForm
+import datetime
+
+
+class BookList(ListView):
+    template_name = 'book_list.html'
+    form_class = SearchBookForm
+    current = datetime.datetime.now()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = SearchBookForm()
+        return context
+
+    def get_queryset(self):
+        queryset = Book.objects.all()
+        field = self.request.GET.get
+        
+        authors = field('authors','')
+        title = field('title','')
+        language = field('language','')
+        published_date_from_month = field('published_date_from_month','')
+        published_date_from_year = field('published_date_from_year','')
+        published_date_from_day = field('published_date_from_day','')
+        published_date_to_month = field('published_date_to_month','')
+        published_date_to_year = field('published_date_to_year','')
+        published_date_to_day = field('published_date_to_day','')
+
+        published_date_from = published_date_from_year + '-' + published_date_from_month + '-' + published_date_from_day
+        published_date_to = published_date_to_year + '-' + published_date_to_month + '-' + published_date_to_day
+
+        if ((len(published_date_from)>7 and len(published_date_from)< 11) and
+             (len(published_date_to) >7 and len(published_date_to)<11)):
+
+            queryset = BookAuthors.objects.filter(author__author__icontains=authors,
+                                                    book__title__icontains=title,
+                                                    book__language__icontains=language,
+                                                    book__published_date__range=[published_date_from,published_date_to])
+            return queryset
+
+        elif authors is not '':
+
+            queryset = BookAuthors.objects.filter(author__author__icontains=authors,
+                                                    book__title__icontains=title,
+                                                    book__language__icontains=language)
+            return queryset
+
+        elif title is not '' or language is not '':
+
+            book = Book.objects.filter(title__icontains=title,
+                                        language__icontains=language)
+            queryset = book
+            return queryset
+
+        return queryset
+
+
 
 class BookAdd(FormView):
     form_class = BookAddForm
     template_name = 'book_add.html'
-    success_url = reverse_lazy('book_add')
+    success_url = reverse_lazy('book_list')
 
     def form_valid(self,form):
         data = form.cleaned_data
