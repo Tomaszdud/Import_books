@@ -33,7 +33,8 @@ class BookList(ListView):
         published_date_from = published_date_from_year + '-' + published_date_from_month + '-' + published_date_from_day
         published_date_to = published_date_to_year + '-' + published_date_to_month + '-' + published_date_to_day
 
-        if (len(published_date_from) is 8 and len(published_date_to) is 8):
+        if ((len(published_date_from)>7 and len(published_date_from)< 11) and
+             (len(published_date_to) >7 and len(published_date_to)<11)):
 
             queryset = BookAuthors.objects.filter(author__author__icontains=authors,
                                                     book__title__icontains=title,
