@@ -21,9 +21,13 @@ class BookAddForm(forms.Form):
     second_identifier_industry = forms.CharField(required=False)
 
 
-class SearchBookForm(forms.Form):
+class BookSearchForm(forms.Form):
     title = forms.CharField(required=False)
     authors = forms.CharField(required=False)
     published_date_from = forms.DateField(required=False,widget=forms.SelectDateWidget(years=range(1000,current.year+1)))
     published_date_to = forms.DateField(required=False,widget=forms.SelectDateWidget(years=range(1000,current.year+1)))
     language = forms.CharField(required=False,label='Language (acronym)')
+
+
+class BookImportForm(forms.Form):
+    query = forms.CharField(required=True)

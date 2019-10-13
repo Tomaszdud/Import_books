@@ -1,19 +1,20 @@
 from django.shortcuts import render
 from django.urls import reverse_lazy
-from django.views.generic import ListView,CreateView, FormView
+from django.views.generic import ListView,CreateView, FormView, TemplateView
 from .models import Book,ImageLinks,IndustryIdentifiers,BookAuthors, Authors
-from .forms import BookAddForm, SearchBookForm
+from .forms import BookAddForm, BookSearchForm, BookImportForm
 import datetime
+from .services import get_books, camel_case_split
 
 
 class BookList(ListView):
     template_name = 'book_list.html'
-    form_class = SearchBookForm
+    form_class = BookSearchForm
     current = datetime.datetime.now()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = SearchBookForm()
+        context['form'] = BookSearchForm()
         return context
 
     def get_queryset(self):
@@ -119,3 +120,81 @@ class BookAdd(FormView):
         return super().form_valid(form)
 
 
+class BooksImport(TemplateView):
+    template_name = 'book_import.html'
+    form_class = BookImportForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = BookImportForm()
+        return context
+
+
+    def get(self,request,*args,**kwargs):
+
+        auth_key = 'AIzaSyAhghFhEl4OCkdUGdCmJ646G8sAgO2k0WQ'
+        query = request.GET.get('query')
+
+        if query is not None:
+            books = get_books(query,auth_key)
+
+            for index in range(len(books)):
+
+                try:
+
+                    book = books[index]['volumeInfo']
+
+                    first_loop=True
+                    for key,value in book.items():
+                        if key == 'imageLinks':
+
+                            for k,v in value.items():
+                                k = camel_case_split(k)
+                                if first_loop:
+                                    links = ImageLinks.objects.create(**{k:v})
+                                    first_loop = False
+                                    continue
+                                setattr(links,k,v)
+                                links.save()                                
+                                        
+                        continue
+
+                except KeyError:
+                    pass
+
+                try:
+                    first_loop=True
+                    for key,value in book.items():
+                        key = camel_case_split(key)
+                        if first_loop:
+                            model_book = Book.objects.create(**{key:value},image_links=links)
+                            first_loop = False
+                            continue
+                        elif key == 'authors':
+                            for name in book[key]:
+                                author = Authors.objects.create(author=name)
+                                BookAuthors.objects.create(book=model_book,author=author)
+                        elif key == 'language':
+                            setattr(model_book,key,value)
+                            model_book.save()
+                        elif key == 'page_count':
+                            setattr(model_book,key,value)
+                        elif key == 'published_date':
+                            setattr(model_book,key,value)                 
+                        elif key == 'industry_identifiers':
+                            first_l=True
+                            for i in range(len(book['industryIdentifiers'])):
+                                for field, val in book['industryIdentifiers'][i].items():
+                                    if first_loop:
+                                        industry = IndustryIdentifiers.objects.create(**{field:val},book=model_book)
+                                        industry.save()
+                                        first_loop=False
+                                        continue
+                                    x = IndustryIdentifiers.objects.order_by("-pk")[0]
+                                    setattr(x,field,val)
+                                    x.save()
+                                    first_l = True
+                except Exception:
+                    print('ops'.s)
+
+        return super().get(request)
