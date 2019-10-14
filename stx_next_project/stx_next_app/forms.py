@@ -1,5 +1,7 @@
 from django import forms
 import datetime
+from django_filters import rest_framework as filters
+from .models import Book, BookAuthors
 
 current = datetime.datetime.now()
 
@@ -31,3 +33,24 @@ class BookSearchForm(forms.Form):
 
 class BookImportForm(forms.Form):
     query = forms.CharField(required=True)
+
+
+
+# class BookFilter(filters.FilterSet):
+#     class Meta:
+#         model = Book
+#         fields = {
+#             'title': ['contains'],
+#             'language': ['exact'],
+#             'published_date':['range'],
+#             }
+
+class BookFilter(filters.FilterSet):
+    class Meta:
+        model = BookAuthors
+        fields = {
+                'book__title':['contains'],
+                'book__language': ['exact'],
+                'book__published_date':['range'],
+                'author__author':['contains'],
+            }

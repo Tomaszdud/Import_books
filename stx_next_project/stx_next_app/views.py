@@ -2,9 +2,13 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import ListView,CreateView, FormView, TemplateView
 from .models import Book,ImageLinks,IndustryIdentifiers,BookAuthors, Authors
-from .forms import BookAddForm, BookSearchForm, BookImportForm
+from .forms import BookAddForm, BookSearchForm, BookImportForm, BookFilter
 import datetime
 from .services import get_books, camel_case_split
+from rest_framework.generics import ListAPIView
+from rest_framework.response import Response
+from .serializers import BookSerializer
+from django_filters import rest_framework as filters
 
 
 class BookList(ListView):
@@ -198,3 +202,16 @@ class BooksImport(TemplateView):
                     print('ops'.s)
 
         return super().get(request)
+
+
+class BookRestView(ListAPIView):
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = BookFilter
+    serializer_class = BookSerializer
+
+    def get_queryset(self):
+        try:
+            queryset = BookAuthors.objects.all()
+            return queryset
+        except Book.DoesNotExist:
+            raise Http404
