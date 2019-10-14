@@ -15,7 +15,7 @@ class BookAddForm(forms.Form):
     small_image_link = forms.URLField(required=False)
     medium_image_link = forms.URLField(required=False)
     large_image_link = forms.URLField(required=False)
-    extralarge_image_link = forms.URLField(required=False)
+    extra_large_image_link = forms.URLField(required=False)
     language = forms.CharField(required=False,label='Language (acronym)')
     type_industry = forms.CharField(required=False)
     identifier_industry = forms.CharField(required=False)
@@ -34,16 +34,6 @@ class BookSearchForm(forms.Form):
 class BookImportForm(forms.Form):
     query = forms.CharField(required=True)
 
-
-
-# class BookFilter(filters.FilterSet):
-#     class Meta:
-#         model = Book
-#         fields = {
-#             'title': ['contains'],
-#             'language': ['exact'],
-#             'published_date':['range'],
-#             }
 
 class BookFilter(filters.FilterSet):
     class Meta:

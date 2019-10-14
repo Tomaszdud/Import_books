@@ -17,11 +17,13 @@ class BookList(ListView):
     current = datetime.datetime.now()
 
     def get_context_data(self, **kwargs):
+
         context = super().get_context_data(**kwargs)
         context['form'] = BookSearchForm()
         return context
 
     def get_queryset(self):
+
         queryset = Book.objects.all()
         field = self.request.GET.get
         
@@ -82,7 +84,7 @@ class BookAdd(FormView):
         small_image_link = data['small_image_link']
         medium_image_link = data['medium_image_link']
         large_image_link = data['large_image_link']
-        extralarge_image_link = data['extralarge_image_link']
+        extralarge_image_link = data['extra_large_image_link']
         language = data['language']
         type_industry = data['type_industry']
         identifier_industry = data['identifier_industry']
@@ -94,7 +96,7 @@ class BookAdd(FormView):
                                 small=small_image_link,
                                 medium=medium_image_link,
                                 large=large_image_link,
-                                extraLarge=extralarge_image_link)
+                                extra_large=extralarge_image_link)
         images.save()
 
         book = Book.objects.create(title=title,
@@ -129,6 +131,7 @@ class BooksImport(TemplateView):
     form_class = BookImportForm
 
     def get_context_data(self, **kwargs):
+
         context = super().get_context_data(**kwargs)
         context['form'] = BookImportForm()
         return context
@@ -144,42 +147,50 @@ class BooksImport(TemplateView):
             books = get_books(query,auth_key)
 
             for index in range(len(books)):
-
-                try:
                     
-                    book = books[index]['volumeInfo']
-                    first_loop = True
-                    for k,v in book['imageLinks'].items():
-                        k = camel_case_split(k)
-                        if first_loop:
+                book = books[index].get('volumeInfo','')
+
+                first_loop = True
+                for k,v in book.get('imageLinks',{}).items():
+
+                    k = camel_case_split(k)
+                    if first_loop:
+                        if k is not None:
                             links = ImageLinks.objects.create(**{k:v})
                             first_loop = False
                             continue
-                        setattr(links,k,v)
-                        links.save()
+                    setattr(links,k,v)
+                    links.save()
 
-                    model_book = Book.objects.create(title=book['title'],
-                                        published_date=book['publishedDate'],
-                                        page_count=book['pageCount'],
-                                        image_links=links,
-                                        language=book['language'])
+                if 3 < len(book.get('publishedDate','')) < 10 :
+                    published_date = book.get('publishedDate') + '-' + '01' + '-' + '01'
+                else:
+                        published_date = book.get('publishedDate','')
 
-                    for writer in book['authors']:
-                        author = Authors.objects.create(author=writer)
-                        BookAuthors.objects.create(book=model_book,author=author)
-                    for i in range(len(book['industryIdentifiers'])):
-                        first_loop = True
-                        for k,v in book['industryIdentifiers'][i].items():
-                            k = camel_case_split(k)
-                            industry = IndustryIdentifiers.objects.create(**{k:v},book=model_book)
-                            first_loop = False
+                model_book = Book.objects.create(title=book.get('title',''),
+                                    published_date=published_date,
+                                    page_count=book.get('page_count'),
+                                    image_links=links,
+                                    language=book.get('language',''))
+
+                for writer in book.get('authors',''):
+                    author = Authors.objects.create(author=writer)
+                    BookAuthors.objects.create(book=model_book,author=author)
+
+                for i in range(len(book.get('industryIdentifiers',''))):
+                    loop = 0
+                    check = 1
+                    for k,v in book.get('industryIdentifiers',{})[i].items():
+
+                        k = camel_case_split(k)
+                        if loop == check:
+                            setattr(industry,k,v)
+                            industry.save()
+                            check +=1
                             continue
-                        setattr(industry,k,v)
-                        industry.save()
-                except KeyError:
-                    print('lol')
+                        industry = IndustryIdentifiers.objects.create(**{k:v},book=model_book)
+                        loop +=1
                     
-
         return super().get(request)
 
 
@@ -189,6 +200,7 @@ class BookRestView(ListAPIView):
     serializer_class = BookSerializer
 
     def get_queryset(self):
+
         try:
             queryset = BookAuthors.objects.all()
             return queryset

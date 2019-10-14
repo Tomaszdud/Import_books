@@ -1,9 +1,10 @@
 from django.db import models
 
+DATE_FORMATS = ['%Y-%m-%d','%Y']
 
 class Book(models.Model):
     title = models.TextField()
-    published_date = models.TextField(null=True)
+    published_date = models.DateField(null=True)
     page_count = models.IntegerField(null=True)
     image_links = models.ForeignKey('ImageLinks', on_delete=models.DO_NOTHING, null=True)
     language = models.CharField(max_length=10)
