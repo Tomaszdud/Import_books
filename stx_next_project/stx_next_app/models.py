@@ -3,9 +3,9 @@ from django.db import models
 
 class Book(models.Model):
     title = models.TextField()
-    published_date = models.DateField(null=True)
+    published_date = models.TextField(null=True)
     page_count = models.IntegerField(null=True)
-    image_links = models.ForeignKey('ImageLinks', on_delete=models.DO_NOTHING)
+    image_links = models.ForeignKey('ImageLinks', on_delete=models.DO_NOTHING, null=True)
     language = models.CharField(max_length=10)
 
 
@@ -15,14 +15,14 @@ class Authors(models.Model):
 
 
 class BookAuthors(models.Model):
-    book = models.ForeignKey('Book', on_delete=models.DO_NOTHING)
-    author = models.ForeignKey('Authors', on_delete=models.DO_NOTHING)
+    book = models.ForeignKey('Book', on_delete=models.DO_NOTHING, null=True)
+    author = models.ForeignKey('Authors', on_delete=models.DO_NOTHING, null=True)
 
 
 class IndustryIdentifiers(models.Model):
     type = models.TextField()
     identifier = models.TextField()
-    book = models.ForeignKey('Book', on_delete=models.DO_NOTHING)
+    book = models.ForeignKey('Book', on_delete=models.DO_NOTHING, null=True)
 
 
 class ImageLinks(models.Model):
@@ -31,4 +31,4 @@ class ImageLinks(models.Model):
     small = models.URLField()
     medium = models.URLField()
     large = models.URLField()
-    extraLarge = models.URLField()
+    extra_large = models.URLField()

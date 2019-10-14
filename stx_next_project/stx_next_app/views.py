@@ -140,66 +140,45 @@ class BooksImport(TemplateView):
         query = request.GET.get('query')
 
         if query is not None:
+
             books = get_books(query,auth_key)
 
             for index in range(len(books)):
 
                 try:
-
+                    
                     book = books[index]['volumeInfo']
-
-                    first_loop=True
-                    for key,value in book.items():
-                        if key == 'imageLinks':
-
-                            for k,v in value.items():
-                                k = camel_case_split(k)
-                                if first_loop:
-                                    links = ImageLinks.objects.create(**{k:v})
-                                    first_loop = False
-                                    continue
-                                setattr(links,k,v)
-                                links.save()                                
-                                        
-                        continue
-
-                except KeyError:
-                    pass
-
-                try:
-                    first_loop=True
-                    for key,value in book.items():
-                        key = camel_case_split(key)
+                    first_loop = True
+                    for k,v in book['imageLinks'].items():
+                        k = camel_case_split(k)
                         if first_loop:
-                            model_book = Book.objects.create(**{key:value},image_links=links)
+                            links = ImageLinks.objects.create(**{k:v})
                             first_loop = False
                             continue
-                        elif key == 'authors':
-                            for name in book[key]:
-                                author = Authors.objects.create(author=name)
-                                BookAuthors.objects.create(book=model_book,author=author)
-                        elif key == 'language':
-                            setattr(model_book,key,value)
-                            model_book.save()
-                        elif key == 'page_count':
-                            setattr(model_book,key,value)
-                        elif key == 'published_date':
-                            setattr(model_book,key,value)                 
-                        elif key == 'industry_identifiers':
-                            first_l=True
-                            for i in range(len(book['industryIdentifiers'])):
-                                for field, val in book['industryIdentifiers'][i].items():
-                                    if first_loop:
-                                        industry = IndustryIdentifiers.objects.create(**{field:val},book=model_book)
-                                        industry.save()
-                                        first_loop=False
-                                        continue
-                                    x = IndustryIdentifiers.objects.order_by("-pk")[0]
-                                    setattr(x,field,val)
-                                    x.save()
-                                    first_l = True
-                except Exception:
-                    print('ops'.s)
+                        setattr(links,k,v)
+                        links.save()
+
+                    model_book = Book.objects.create(title=book['title'],
+                                        published_date=book['publishedDate'],
+                                        page_count=book['pageCount'],
+                                        image_links=links,
+                                        language=book['language'])
+
+                    for writer in book['authors']:
+                        author = Authors.objects.create(author=writer)
+                        BookAuthors.objects.create(book=model_book,author=author)
+                    for i in range(len(book['industryIdentifiers'])):
+                        first_loop = True
+                        for k,v in book['industryIdentifiers'][i].items():
+                            k = camel_case_split(k)
+                            industry = IndustryIdentifiers.objects.create(**{k:v},book=model_book)
+                            first_loop = False
+                            continue
+                        setattr(industry,k,v)
+                        industry.save()
+                except KeyError:
+                    print('lol')
+                    
 
         return super().get(request)
 

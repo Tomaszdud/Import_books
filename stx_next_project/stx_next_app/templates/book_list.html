@@ -17,9 +17,11 @@
          <h2>List:</h2>
          {%for book in object_list%}
          {%if book.book.title%}
-            <p>{{book.book.title}}</p>
+         title: {{book.book.title}} | published date: {{book.book.published_date}} | page count: {{book.book.page_count}} | language: {{book.book.language}}</li>
          {%else%}
-         <p>{{book.title}}</p>
+         <ul>
+         <li>title: {{book.title}} | published date: {{book.published_date}} | page count: {{book.page_count}} | language: {{book.language}}</li>
+        </ul>
          {%endif%}
          {%endfor%}
      </body>

@@ -4,7 +4,7 @@ import re
 def get_books(query,auth_key):
 
     url = 'https://www.googleapis.com/books/v1/volumes' 
-    params = {'q':query,'maxResults':1,'key':auth_key}
+    params = {'q':query,'maxResults':3,'key':auth_key}
     r = requests.get(url, params=params)
     books = r.json()
     books_list = books['items']

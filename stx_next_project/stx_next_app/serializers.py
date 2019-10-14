@@ -4,6 +4,6 @@ from .models import *
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookAuthors
-        fields=['author']
-        depth = 3
+        fields=['author','book']
+        depth = 2
 
