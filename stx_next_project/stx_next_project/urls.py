@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from stx_next_app.views import BookAdd, BookList,BooksImport,BookRestView
+from stx_next_app.views import BookAdd, BookList, BooksImport, BookRestView
 
 urlpatterns = [
     path('admin/', admin.site.urls),

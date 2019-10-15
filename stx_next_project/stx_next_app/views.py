@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.urls import reverse_lazy
-from django.views.generic import ListView,CreateView, FormView, TemplateView
-from .models import Book,ImageLinks,IndustryIdentifiers,BookAuthors, Authors
+from django.views.generic import ListView, CreateView, FormView, TemplateView
+from .models import Book, ImageLinks, IndustryIdentifiers, BookAuthors, Authors
 from .forms import BookAddForm, BookSearchForm, BookImportForm, BookFilter
 import datetime
 from .services import get_books, camel_case_split
@@ -27,26 +27,26 @@ class BookList(ListView):
         queryset = Book.objects.all()
         field = self.request.GET.get
         
-        authors = field('authors','')
-        title = field('title','')
-        language = field('language','')
-        published_date_from_month = field('published_date_from_month','')
-        published_date_from_year = field('published_date_from_year','')
-        published_date_from_day = field('published_date_from_day','')
-        published_date_to_month = field('published_date_to_month','')
-        published_date_to_year = field('published_date_to_year','')
-        published_date_to_day = field('published_date_to_day','')
+        authors = field('authors', '')
+        title = field('title', '')
+        language = field('language', '')
+        published_date_from_month = field('published_date_from_month', '')
+        published_date_from_year = field('published_date_from_year', '')
+        published_date_from_day = field('published_date_from_day', '')
+        published_date_to_month = field('published_date_to_month', '')
+        published_date_to_year = field('published_date_to_year', '')
+        published_date_to_day = field('published_date_to_day', '')
 
         published_date_from = published_date_from_year + '-' + published_date_from_month + '-' + published_date_from_day
         published_date_to = published_date_to_year + '-' + published_date_to_month + '-' + published_date_to_day
 
-        if ((len(published_date_from)>7 and len(published_date_from)< 11) and
-             (len(published_date_to) >7 and len(published_date_to)<11)):
+        if ((len(published_date_from) > 7 and len(published_date_from) < 11) and
+             (len(published_date_to) > 7 and len(published_date_to) < 11)):
 
             queryset = BookAuthors.objects.filter(author__author__icontains=authors,
                                                     book__title__icontains=title,
                                                     book__language__icontains=language,
-                                                    book__published_date__range=[published_date_from,published_date_to])
+                                                    book__published_date__range=[published_date_from, published_date_to])
             return queryset
 
         elif authors is not '':
@@ -66,13 +66,12 @@ class BookList(ListView):
         return queryset
 
 
-
 class BookAdd(FormView):
     form_class = BookAddForm
     template_name = 'book_add.html'
     success_url = reverse_lazy('book_list')
 
-    def form_valid(self,form):
+    def form_valid(self, form):
         data = form.cleaned_data
 
         title = data['title']
@@ -104,13 +103,12 @@ class BookAdd(FormView):
                             page_count=page_count,
                             image_links=images,
                             language=language)
-        
         book.save()
 
         for new_author in authors.split(','):
             author = Authors.objects.create(author=new_author)
             author.save()
-            book_authors = BookAuthors.objects.create(book=book,author=author)
+            book_authors = BookAuthors.objects.create(book=book, author=author)
             book_authors.save()
 
         industry = IndustryIdentifiers.objects.create(type=type_industry,
@@ -136,66 +134,63 @@ class BooksImport(TemplateView):
         context['form'] = BookImportForm()
         return context
 
-
-    def get(self,request,*args,**kwargs):
-
+    def get(self, request, *args, **kwargs):
         auth_key = 'AIzaSyAhghFhEl4OCkdUGdCmJ646G8sAgO2k0WQ'
         query = request.GET.get('query')
 
         if query is not None:
 
-            books = get_books(query,auth_key)
+            books = get_books(query, auth_key)
 
             for index in range(len(books)):
-                    
-                book = books[index].get('volumeInfo','')
+
+                book = books[index].get('volumeInfo', '')
 
                 first_loop = True
-                for k,v in book.get('imageLinks',{}).items():
+                for k, v in book.get('imageLinks', {}).items():
 
                     k = camel_case_split(k)
                     if first_loop:
                         if k is not None:
-                            links = ImageLinks.objects.create(**{k:v})
+                            links = ImageLinks.objects.create(**{k: v})
                             first_loop = False
                             continue
-                    setattr(links,k,v)
+                    setattr(links, k, v)
                     links.save()
 
-                if 3 < len(book.get('publishedDate','')) < 10 :
+                if 3 < len(book.get('publishedDate', '')) < 10:
                     published_date = book.get('publishedDate') + '-' + '01' + '-' + '01'
                 else:
-                        published_date = book.get('publishedDate','')
+                        published_date = book.get('publishedDate', '')
 
-                model_book = Book.objects.create(title=book.get('title',''),
-                                    published_date=published_date,
-                                    page_count=book.get('page_count'),
-                                    image_links=links,
-                                    language=book.get('language',''))
+                model_book = Book.objects.create(title=book.get('title', ''),
+                                                published_date=published_date,
+                                                page_count=book.get('page_count'),
+                                                image_links=links,
+                                                language=book.get('language', ''))
 
-                for writer in book.get('authors',''):
+                for writer in book.get('authors', ''):
                     author = Authors.objects.create(author=writer)
-                    BookAuthors.objects.create(book=model_book,author=author)
+                    BookAuthors.objects.create(book=model_book, author=author)
 
-                for i in range(len(book.get('industryIdentifiers',''))):
+                for i in range(len(book.get('industryIdentifiers', ''))):
                     loop = 0
                     check = 1
-                    for k,v in book.get('industryIdentifiers',{})[i].items():
+                    for k, v in book.get('industryIdentifiers', {})[i].items():
 
                         k = camel_case_split(k)
                         if loop == check:
-                            setattr(industry,k,v)
+                            setattr(industry, k, v)
                             industry.save()
-                            check +=1
+                            check += 1
                             continue
-                        industry = IndustryIdentifiers.objects.create(**{k:v},book=model_book)
-                        loop +=1
-                    
+                        industry = IndustryIdentifiers.objects.create(**{k: v}, book=model_book)
+                        loop += 1
         return super().get(request)
 
 
 class BookRestView(ListAPIView):
-    filter_backends = (filters.DjangoFilterBackend,)
+    filter_backends = (filters.DjangoFilterBackend)
     filterset_class = BookFilter
     serializer_class = BookSerializer
 

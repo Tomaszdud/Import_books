@@ -1,6 +1,5 @@
 from django.db import models
 
-DATE_FORMATS = ['%Y-%m-%d','%Y']
 
 class Book(models.Model):
     title = models.TextField()
