@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+     <head>
+          <meta charset="UTF-8"/>
+          <title>STX NEXT-Books</title>
+     </head>
+     <header>
+         <a href={% url 'book_add' %}><button>Add new book</button></a>
+     </header>
+     <body>
+         <h2>Search:</h2>
+         <p>*Set full date range</p>
+         <form method="GET">
+             {{form.as_p}}
+            <input type="submit" value="search">
+         </form>
+         <h2>List:</h2>
+         {%for book in object_list%}
+         {%if book.book.title%}
+         <ul>
+         <li>title: {{book.book.title}} | published date: {{book.book.published_date}} | page count: {{book.book.page_count}} | language: {{book.book.language}}</li>
+         </ul>
+         {%else%}
+         <ul>
+         <li>title: {{book.title}} | published date: {{book.published_date}} | page count: {{book.page_count}} | language: {{book.language}}</li>
+        </ul>
+         {%endif%}
+         {%endfor%}
+     </body>
+</html>
