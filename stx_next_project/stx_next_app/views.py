@@ -9,6 +9,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from .serializers import BookSerializer
 from django_filters import rest_framework as filters
+from security_key import import_key
 
 
 class BookList(ListView):
@@ -26,7 +27,7 @@ class BookList(ListView):
 
         queryset = Book.objects.all()
         field = self.request.GET.get
-        
+
         authors = field('authors', '')
         title = field('title', '')
         language = field('language', '')
@@ -37,29 +38,44 @@ class BookList(ListView):
         published_date_to_year = field('published_date_to_year', '')
         published_date_to_day = field('published_date_to_day', '')
 
-        published_date_from = published_date_from_year + '-' + published_date_from_month + '-' + published_date_from_day
-        published_date_to = published_date_to_year + '-' + published_date_to_month + '-' + published_date_to_day
+        published_date_from = (
+                                published_date_from_year +
+                                '-' + published_date_from_month +
+                                '-' + published_date_from_day
+                                )
+
+        published_date_to = (
+                                published_date_to_year +
+                                '-' + published_date_to_month +
+                                '-' + published_date_to_day
+                                )
 
         if ((len(published_date_from) > 7 and len(published_date_from) < 11) and
              (len(published_date_to) > 7 and len(published_date_to) < 11)):
 
-            queryset = BookAuthors.objects.filter(author__author__icontains=authors,
+            queryset = BookAuthors.objects.filter(
+                                                    author__author__icontains=authors,
                                                     book__title__icontains=title,
                                                     book__language__icontains=language,
-                                                    book__published_date__range=[published_date_from, published_date_to])
+                                                    book__published_date__range=[published_date_from, published_date_to]
+                                                    )
             return queryset
 
         elif authors is not '':
 
-            queryset = BookAuthors.objects.filter(author__author__icontains=authors,
+            queryset = BookAuthors.objects.filter(
+                                                    author__author__icontains=authors,
                                                     book__title__icontains=title,
-                                                    book__language__icontains=language)
+                                                    book__language__icontains=language
+                                                    )
             return queryset
 
         elif title is not '' or language is not '':
 
-            book = Book.objects.filter(title__icontains=title,
-                                        language__icontains=language)
+            book = Book.objects.filter(
+                                        title__icontains=title,
+                                        language__icontains=language
+                                        )
             queryset = book
             return queryset
 
@@ -90,19 +106,23 @@ class BookAdd(FormView):
         second_type_industry = data['second_type_industry']
         second_identifier_industry = data['second_identifier_industry']
 
-        images = ImageLinks.objects.create(small_thumbnail=small_thumbnail_image_link,
+        images = ImageLinks.objects.create(
+                                small_thumbnail=small_thumbnail_image_link,
                                 thumbnail=thumbnail_image_link,
                                 small=small_image_link,
                                 medium=medium_image_link,
                                 large=large_image_link,
-                                extra_large=extralarge_image_link)
+                                extra_large=extralarge_image_link
+                                )
         images.save()
 
-        book = Book.objects.create(title=title,
+        book = Book.objects.create(
+                            title=title,
                             published_date=published_date,
                             page_count=page_count,
                             image_links=images,
-                            language=language)
+                            language=language
+                            )
         book.save()
 
         for new_author in authors.split(','):
@@ -111,14 +131,18 @@ class BookAdd(FormView):
             book_authors = BookAuthors.objects.create(book=book, author=author)
             book_authors.save()
 
-        industry = IndustryIdentifiers.objects.create(type=type_industry,
+        industry = IndustryIdentifiers.objects.create(
+                                            type=type_industry,
                                             identifier=identifier_industry,
-                                            book=book)
+                                            book=book
+                                            )
         industry.save()
 
-        second_industry = IndustryIdentifiers.objects.create(type=second_type_industry,
+        second_industry = IndustryIdentifiers.objects.create(
+                                            type=second_type_industry,
                                             identifier=second_identifier_industry,
-                                            book=book)
+                                            book=book
+                                            )
         second_industry.save()
 
         return super().form_valid(form)
@@ -135,7 +159,7 @@ class BooksImport(TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        auth_key = 'AIzaSyAhghFhEl4OCkdUGdCmJ646G8sAgO2k0WQ'
+        auth_key = import_key
         query = request.GET.get('query')
 
         if query is not None:
@@ -163,11 +187,13 @@ class BooksImport(TemplateView):
                 else:
                         published_date = book.get('publishedDate', '')
 
-                model_book = Book.objects.create(title=book.get('title', ''),
+                model_book = Book.objects.create(
+                                                title=book.get('title', ''),
                                                 published_date=published_date,
                                                 page_count=book.get('page_count'),
                                                 image_links=links,
-                                                language=book.get('language', ''))
+                                                language=book.get('language', '')
+                                                )
 
                 for writer in book.get('authors', ''):
                     author = Authors.objects.create(author=writer)
@@ -184,7 +210,10 @@ class BooksImport(TemplateView):
                             industry.save()
                             check += 1
                             continue
-                        industry = IndustryIdentifiers.objects.create(**{k: v}, book=model_book)
+                        industry = IndustryIdentifiers.objects.create(
+                                                                **{k: v},
+                                                                book=model_book
+                                                                )
                         loop += 1
         return super().get(request)
 
@@ -201,3 +230,4 @@ class BookRestView(ListAPIView):
             return queryset
         except Book.DoesNotExist:
             raise Http404
+
